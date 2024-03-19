@@ -1,0 +1,3 @@
+docker run --rm -v $(pwd):/app composer install
+
+To install Composer as a Docker images

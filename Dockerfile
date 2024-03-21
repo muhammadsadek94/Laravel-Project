@@ -15,7 +15,22 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libonig-dev \
-    libzip-dev  # Install libzip-dev package
+    libzip-dev  # Install libzip-dev package \
+
+#install netstat
+RUN apt-get update && apt-get install net-tools 
+
+#install systemctl 
+RUN apt-get update && apt-get install -y systemctl
+
+# Install Supervisor
+RUN apt-get update && apt-get install -y supervisor && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install RabbitMQ PHP extension
+RUN apt-get update && apt-cache search librabbitmq-dev 
+RUN apt-get update
+RUN apt-get install -y librabbitmq-dev && pecl install amqp && docker-php-ext-enable amqp
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -29,9 +44,41 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Set working directory
 WORKDIR /var/www/html
 
+# Install PHP and PHP-FPM
+#RUN apt-get update && apt-get install -y php8.2 php8.2-fpm
+
 # Copy existing application files
 COPY . .
+
+# Install phpMyAdmin (if available)
+RUN apt-get update && apt-get install -y phpmyadmin || echo "phpmyadmin installation skipped"
+
+# Create storage directory for Laravel logs
+RUN mkdir -p /var/www/html/storage/logs/
+
+# Copy Supervisor configuration file
+#COPY laravel-worker.conf /etc/supervisor/conf.d/laravel-worker.conf
+#ADD  supervisor.conf /etc/supervisor/conf.d/worker.conf 
+
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN  mkdir -p /run/supervisor/
+RUN chown -R nobody:nogroup /run/supervisor/
+
+RUN mkdir /var/log/supervisord/
+RUN touch /var/log/supervisord/supervisord.log
+COPY idle.conf /var/www/idle.sh
+
+RUN chown -R root:root /var/log/supervisord/
+RUN chmod -R 777 /var/www/idle.sh
+
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
+
+# Start PHP-FPM service
 CMD ["php-fpm"]
 
+# Start Supervisor when the container starts
+RUN echo user=root >>  /etc/supervisor/supervisord.conf
+#CMD ["/usr/bin/supervisord","-n"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+#CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]

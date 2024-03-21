@@ -1,0 +1,41 @@
+[unix_http_server]
+file=/var/run/supervisor.sock
+chmod=0770
+chown=nobody:nogroup
+
+[supervisord]
+logfile=/var/log/supervisord/supervisord.log
+logfile_maxbytes=50MB
+logfile_backups=10
+loglevel=info
+pidfile=/var/run/supervisord.pid
+nodaemon=true
+minfds=1024
+minprocs=200
+user=nobody
+
+#[inet_http_server]
+#port = 9001
+#username = root
+#password = root
+
+/etc/supervisord.conf
+[unix_http_server]
+file=/run/supervisor/supervisor.sock
+
+
+
+[supervisorctl]
+serverurl=unix:///var/run/supervisor.sock
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl = unix:///var/run/supervisor.sock
+
+[include]
+files = /etc/supervisor/conf.d/*.conf
+#/etc/supervisor/supervisord.conf
+#/etc/supervisor/conf.d/*.conf
+

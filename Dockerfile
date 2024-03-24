@@ -70,6 +70,9 @@ COPY idle.conf /var/www/idle.sh
 
 RUN chown -R root:root /var/log/supervisord/
 RUN chmod -R 777 /var/www/idle.sh
+RUN chmod o+w /var/log/supervisord/supervisord.log
+
+COPY idle_script.sh /usr/local/bin/idle_script.sh
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
